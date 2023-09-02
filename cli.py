@@ -102,17 +102,24 @@ def cli():
             setcookies()
         # 下载视频
         if c == '3':
-            print("输入bvid:")
-            bvid = input()
-            cid_group = getInfo.getcid(bvid, headers)
-            # 单p直接下载
-            if (len(cid_group) == 1):
-                cid = str(cid_group[0]['cid'])
-                print("开始下载",cid_group[0]['part'],)
-                download.get_mp4(bvid, cid, headers,qn)
-            # 多p下载
+            print("输入bvid/ep_id:")
+            id = input()
+            # 如果是bvid
+            if id[:2]=="BV":
+                bvid=id
+                cid_group = getInfo.getcid(bvid, headers)
+                # 单p直接下载
+                if (len(cid_group) == 1):
+                    cid = str(cid_group[0]['cid'])
+                    print("开始下载",cid_group[0]['part'],)
+                    download.get_mp4(bvid, cid, headers,qn)
+                # 多p下载
+                else:
+                    np_download(bvid, cid_group)
+            # ep_id
             else:
-                np_download(bvid, cid_group)
+                download.get_mp4_ep_id(id,headers,qn)
+
         # 清晰度
         if c=='4':
             check_qn()
