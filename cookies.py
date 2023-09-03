@@ -10,7 +10,8 @@ def get_cookies():
         file.close()
         return content
     except:
-        print("未发现cookies配置,请先设置cookies")
+        # print("未发现cookies配置,请先设置cookies")
+        pass
 
 if __name__ == "__main__":
     set_cookies("")

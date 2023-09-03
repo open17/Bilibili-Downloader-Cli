@@ -1,40 +1,84 @@
 import getInfo
 import cookies
 import download
-
+import login
 # options
-ops = ['设置/修改cookies(SESSDATA)', '更新headers(变更cookies后需要进行更新)', '开始下载','清晰度','说明','退出']
+ops = ['设置cookies(SESSDATA)', '查看headers', '开始下载', '清晰度', '说明', '退出']
+
 # default header
 headers = {
     'Referer': 'https://www.bilibili.com',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0',
 }
 
+qn_list = ["240P 极速",
+           "360P 流畅",
+           "480P 清晰",
+           "720P 高清",
+           "720P60 高帧率",
+           "1080P 高清",
+           "1080P+ 高码率",
+           "1080P60 高帧率",
+           "4K 超清"]
+qn_map = {
+    "240P 极速": "6",
+    "360P 流畅": "16",
+    "480P 清晰": "32",
+    "720P 高清": "64",
+    "720P60 高帧率": "74",
+    "1080P 高清": "80",
+    "1080P+ 高码率": "112",
+    "1080P60 高帧率": "116",
+    "4K 超清": "120"
+}
+
+
 # 默认清晰度
-qn="80"
+qn = "80"
+qn_word="1080P 高清"
 
 # 设置headers
 def setheaders():
     Cookies = cookies.get_cookies()
     if Cookies:
         headers['Cookie'] = Cookies
-        print("\nheaders更新成功,当前headers:\n", headers)
-        print()
+
+
+# 获取headers
+def getheaders():
+    print("\n当前headers:\n", headers)
+    print()
 
 # 清晰度
 def check_qn():
-    global qn
-    print("当前清晰度",qn,"\n输入y修改, n退出:")
-    ans=input()
-    if ans=='y':
-        print("新清晰度:")
-        qn=input()
+    global qn,qn_word
+    print("当前清晰度", qn_word,"\n\n")
+    for i,qn_w in enumerate(qn_list):
+        print(i+1,qn_w)
+    print("\n要更改清晰度请输入对应的序号,输入其他任意键退出:",end=" ")
+    try:
+        idx = int(input())
+        qn_word=qn_list[idx-1]
+        qn=qn_map[qn_word]
+        print("修改完成,当前清晰度:", qn_word)
+    except:
+        print("返回主界面")
 
 
 # 更新cookies
 def setcookies():
-    print("请输入cookies: ", end=" ")
-    cookies.set_cookies(input())
+    print("请确认获取cookies方式:\n1 扫码登入自动获取 \n2 手动输入cookies(SESSDATA)值")
+    ans = input()
+    if ans == "1":
+        print("生成登入二维码...")
+        SESSDATA = login.qrlogin_return_cookies()
+    else:
+        print("请输入SESSDATA值: ", end=" ")
+        SESSDATA = input()
+    cookies.set_cookies(SESSDATA)
+    setheaders()
+    print("自动更新headers")
+    getheaders()
 
 # 多p下载视频
 def np_download(bvid, cid_group):
@@ -50,8 +94,8 @@ def np_download(bvid, cid_group):
             print("输入要下载的p号(1 -", len(cid_group), "): ", end=" ")
             id = int(input())-1
             cid = str(cid_group[id]['cid'])
-            print("开始下载",cid_group[id]['part'],)
-            download.get_mp4(bvid, cid, headers,qn)
+            print("开始下载", cid_group[id]['part'],)
+            download.get_mp4(bvid, cid, headers, qn)
         if op == '2':
             print("输入要下载的开始p号: ", end=" ")
             s = int(input())-1
@@ -59,19 +103,19 @@ def np_download(bvid, cid_group):
             e = int(input())
             for i in range(s, e):
                 cid = str(cid_group[i]['cid'])
-                print("开始下载",cid_group[i]['part'],)
-                download.get_mp4(bvid, cid, headers,qn)
+                print("开始下载", cid_group[i]['part'],)
+                download.get_mp4(bvid, cid, headers, qn)
         if op == '4':
             print("退出")
             break
-        if op=='3':
+        if op == '3':
             check_qn()
-
-            
 
 
 # cli主程序
 def cli():
+    # 更新headers
+    setheaders()
     print("""
               
 
@@ -95,36 +139,36 @@ def cli():
         if c == '6':
             break
         # 设置headers
-        if c == '2':
-            setheaders()
+        elif c == '2':
+            getheaders()
         # 设置cookies
-        if c == '1':
+        elif c == '1':
             setcookies()
         # 下载视频
-        if c == '3':
+        elif c == '3':
             print("输入bvid/ep_id:")
             id = input()
             # 如果是bvid
-            if id[:2]=="BV":
-                bvid=id
+            if id[:2] == "BV":
+                bvid = id
                 cid_group = getInfo.getcid(bvid, headers)
                 # 单p直接下载
                 if (len(cid_group) == 1):
                     cid = str(cid_group[0]['cid'])
-                    print("开始下载",cid_group[0]['part'],)
-                    download.get_mp4(bvid, cid, headers,qn)
+                    print("开始下载", cid_group[0]['part'],)
+                    download.get_mp4(bvid, cid, headers, qn)
                 # 多p下载
                 else:
                     np_download(bvid, cid_group)
             # ep_id
             else:
-                download.get_mp4_ep_id(id,headers,qn)
+                download.get_mp4_ep_id(id, headers, qn)
 
         # 清晰度
-        if c=='4':
+        elif c == '4':
             check_qn()
         # 说明
-        if c=='5':
+        elif c == '5':
             print("""
 
 说明:
@@ -163,6 +207,8 @@ cookies(SESSDATA)用于伪装b站登入,也就是说如果需要获取720P及以
 如果还是不行,请通过https://api.bilibili.com/x/player/playurl? 手动构造get请求检查返回视频清晰度,欢迎来提issues
                   
 """)
+        else:
+            print("未知操作")
 
 
 if __name__ == "__main__":
