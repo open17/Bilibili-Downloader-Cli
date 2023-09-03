@@ -3,7 +3,7 @@ import cookies
 import download
 import login
 # options
-ops = ['设置cookies(SESSDATA)', '查看headers', '开始下载', '清晰度', '说明', '退出']
+ops = ['设置cookies(SESSDATA)', '查看headers', '开始下载', '清晰度', '说明', '下载设置','退出']
 
 # default header
 headers = {
@@ -32,6 +32,8 @@ qn_map = {
     "4K 超清": "120"
 }
 
+#默认chunk_size
+chunk_size=1024
 
 # 默认清晰度
 qn = "80"
@@ -95,7 +97,7 @@ def np_download(bvid, cid_group):
             id = int(input())-1
             cid = str(cid_group[id]['cid'])
             print("开始下载", cid_group[id]['part'],)
-            download.get_mp4(bvid, cid, headers, qn,cid_group[id]['part'])
+            download.get_mp4(bvid, cid, headers, qn,cid_group[id]['part'],chunk_size)
         if op == '2':
             print("输入要下载的开始p号: ", end=" ")
             s = int(input())-1
@@ -104,7 +106,7 @@ def np_download(bvid, cid_group):
             for i in range(s, e):
                 cid = str(cid_group[i]['cid'])
                 print("开始下载", cid_group[i]['part'],)
-                download.get_mp4(bvid, cid, headers, qn,cid_group[i]['part'])
+                download.get_mp4(bvid, cid, headers, qn,cid_group[i]['part'],chunk_size)
         if op == '4':
             print("退出")
             break
@@ -114,6 +116,7 @@ def np_download(bvid, cid_group):
 
 # cli主程序
 def cli():
+    global chunk_size
     # 更新headers
     setheaders()
     print("""
@@ -136,7 +139,7 @@ def cli():
         print("请输入对应的操作数字: ", end=" ")
         c = input()
         # 退出
-        if c == '6':
+        if c == '7':
             break
         # 设置headers
         elif c == '2':
@@ -157,13 +160,13 @@ def cli():
                     cid = str(cid_group[0]['cid'])
                     name=cid_group[0]['part']
                     print("开始下载", name)
-                    download.get_mp4(bvid, cid, headers, qn, name)
+                    download.get_mp4(bvid, cid, headers, qn, name,chunk_size)
                 # 多p下载
                 else:
                     np_download(bvid, cid_group)
             # ep_id
             else:
-                download.get_mp4_ep_id(id, headers, qn)
+                download.get_mp4_ep_id(id, headers, qn,chunk_size)
 
         # 清晰度
         elif c == '4':
@@ -174,40 +177,39 @@ def cli():
 
 说明:
                   
-1. 清晰度数值对应清晰度(默认80)
+1. bvid是什么?
                   
-6 	    240P 极速 	
-16 	    360P 流畅 	
-32 	    480P 清晰 	
-64 	    720P 高清(无720P时则为720P60)
-74 	    720P60 高帧率 	
-80 	    1080P 高清 	
-112     1080P+ 高码率 	
-116     1080P60 高帧率 	
-120     4K 超清 	
+    >bvid即为bv号,b站每个视频现在均有一个对应的bv号,格式为BVxxxx,例如BV19u4y1D7GT
+                  
+                  
+2. 如何获取一个视频的bvid
+                  
+    >移动端在视频的简介处显示,网页端可查看当前链接获取
+    例如视频链接为https://www.bilibili.com/video/BV19u4y1D7GT/?spm_id_from=... , 很明显bvid即为BV19u4y1D7GT
+                  
+3. cookies(SESSDATA)是什么?有什么用?
+                  
+    >cookies(SESSDATA)用于某些b站请求的鉴权,比如说如果需要获取一个视频720P及以上其清晰度,便需要设置cookies才能获取(登录)
+    你可以采取扫码登录,或者也可以手动输入cookies中SESSDATA对应的值
+    你可以查看网上教程得知如何取得b站的cookies
 
-                  
-2. bvid是什么?
-                  
-bvid即为bv号,b站每个视频现在均有一个对应的bv号,格式为BVxxxx,例如BV19u4y1D7GT
-                  
-                  
-3. 如何获取一个视频的bvid
-                  
-移动端在视频的简介处显示,网页端可查看当前链接获取
-例如视频链接为https://www.bilibili.com/video/BV19u4y1D7GT/?spm_id_from=...,很明显bvid即为BV19u4y1D7GT
-                  
-4. cookies(SESSDATA)是什么?有什么用?
-                  
-cookies(SESSDATA)用于伪装b站登入,也就是说如果需要获取720P及以上其清晰度,通常需要设置cookies才能获取
-你可以查看网上教程得知如何取得b站的cookies,然后你只需要输入cookies中SESSDATA对应的值即可
-                  
-5. 设置了cookies还是不能下载1080p(或其他)视频?
-                  
-首先,检查是否更新headers;其次,查看cookies是否设置正确以及查看清晰度数是否正确;此外确保该视频本身存在1080p(或其他)清晰度的版本.
-如果还是不行,请通过https://api.bilibili.com/x/player/playurl? 手动构造get请求检查返回视频清晰度,欢迎来提issues
-                  
+4. epid下载失败?
+   > 你可以尝试采取BV号下载的方式,并欢迎来提交issue
+
+5. 下载设置是什么?
+   > 目前只可以设置chunk_size这个属性,chunk_size 越大，下载速度越快，但是也越容易导致网络阻塞。
+    一般来说，对于网络速度较快的文件，可以将 chunk_size 设置为较大的值，例如 10240 或 102400 字节。
+    对于网络速度较慢的文件，可以将 chunk_size 设置为较小的值，例如 1024 或 10240 字节。
+                
 """)
+        elif c=='6':
+            print("当前chunk_size:",chunk_size)
+            print("输入y更改chunk_size,输入其他返回")
+            ans=input()
+            if ans=='y':
+                print("请输入新的chunk_size:",end=" ")
+                chunk_size=int(input())
+                print("当前chunk_size:",chunk_size)
         else:
             print("未知操作")
 
