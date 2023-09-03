@@ -1,8 +1,6 @@
-.npmignore
-node_modules/
+__pycache__/
+build/
 *.txt
 *.spec
 *.mp4
 *.pyc
-__pycache__/**
-build/

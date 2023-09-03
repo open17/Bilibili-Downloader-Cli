@@ -39,4 +39,4 @@ python cli.py
     你可以查看网上教程得知如何取得b站的cookies
 
 4. epid下载失败?
-   > 你可以尝试采取BV号下载的方式,并同时欢迎提交issue
+   > 你可以尝试采取BV号下载的方式,并欢迎来提交issue
