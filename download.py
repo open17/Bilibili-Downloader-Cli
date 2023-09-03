@@ -1,8 +1,8 @@
 import requests
 
-def get_mp4(bvid,cid,headers,qn="16"):
+def get_mp4(bvid,cid,headers,qn="16",name_raw="Movie"):
     url = "https://api.bilibili.com/x/player/playurl?cid="+cid+"&bvid="+bvid+"&qn="+qn
-    name=bvid+'_'+cid+'.mp4'
+    name=name_raw+'.mp4'
     response=None
     response = requests.get(url, headers=headers)
     video_url = response.json()["data"]["durl"][0]["url"]

@@ -95,7 +95,7 @@ def np_download(bvid, cid_group):
             id = int(input())-1
             cid = str(cid_group[id]['cid'])
             print("开始下载", cid_group[id]['part'],)
-            download.get_mp4(bvid, cid, headers, qn)
+            download.get_mp4(bvid, cid, headers, qn,cid_group[id]['part'])
         if op == '2':
             print("输入要下载的开始p号: ", end=" ")
             s = int(input())-1
@@ -104,7 +104,7 @@ def np_download(bvid, cid_group):
             for i in range(s, e):
                 cid = str(cid_group[i]['cid'])
                 print("开始下载", cid_group[i]['part'],)
-                download.get_mp4(bvid, cid, headers, qn)
+                download.get_mp4(bvid, cid, headers, qn,cid_group[i]['part'])
         if op == '4':
             print("退出")
             break
@@ -155,8 +155,9 @@ def cli():
                 # 单p直接下载
                 if (len(cid_group) == 1):
                     cid = str(cid_group[0]['cid'])
-                    print("开始下载", cid_group[0]['part'],)
-                    download.get_mp4(bvid, cid, headers, qn)
+                    name=cid_group[0]['part']
+                    print("开始下载", name)
+                    download.get_mp4(bvid, cid, headers, qn, name)
                 # 多p下载
                 else:
                     np_download(bvid, cid_group)

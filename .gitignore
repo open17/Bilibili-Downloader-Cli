@@ -3,5 +3,7 @@ node_modules/
 *.txt
 *.spec
 *.mp4
+*.pyc
 __pycache__/
 __pycache__
+build/
