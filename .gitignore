@@ -4,6 +4,5 @@ node_modules/
 *.spec
 *.mp4
 *.pyc
-__pycache__/
-__pycache__
+__pycache__/**
 build/
