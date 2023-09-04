@@ -2,8 +2,10 @@ import getInfo
 import cookies
 import download
 import login
+import setting
+
 # options
-ops = ['设置cookies(SESSDATA)', '查看headers', '开始下载', '清晰度', '说明', '下载设置','退出']
+ops = ['设置cookies(SESSDATA)', '查看headers', '开始下载', '下载设置', '说明','退出']
 
 # default header
 headers = {
@@ -38,6 +40,9 @@ chunk_size=1024
 # 默认清晰度
 qn = "80"
 qn_word="1080P 高清"
+
+# 设置弹幕(0关)
+dm=0
 
 # 设置headers
 def setheaders():
@@ -89,7 +94,7 @@ def np_download(bvid, cid_group):
         print("1 单视频下载")
         print("2 批量下载")
         print("3 清晰度")
-        print("4 退出")
+        print("4 返回")
         print("请输入对应的操作数字: ", end=" ")
         op = input()
         if op == '1':
@@ -97,7 +102,7 @@ def np_download(bvid, cid_group):
             id = int(input())-1
             cid = str(cid_group[id]['cid'])
             print("开始下载", cid_group[id]['part'],)
-            download.get_mp4(bvid, cid, headers, qn,cid_group[id]['part'],chunk_size)
+            download.get_mp4(bvid, cid, headers, qn,cid_group[id]['part'],chunk_size,dm)
         if op == '2':
             print("输入要下载的开始p号: ", end=" ")
             s = int(input())-1
@@ -105,20 +110,64 @@ def np_download(bvid, cid_group):
             e = int(input())
             for i in range(s, e):
                 cid = str(cid_group[i]['cid'])
-                print("开始下载", cid_group[i]['part'],)
-                download.get_mp4(bvid, cid, headers, qn,cid_group[i]['part'],chunk_size)
+                print("开始下载", cid_group[i]['part'])
+                download.get_mp4(bvid, cid, headers, qn,cid_group[i]['part'],chunk_size,dm)
         if op == '4':
-            print("退出")
+            print("返回")
             break
         if op == '3':
             check_qn()
 
+# 下载设置
+def setting_config():
+    global chunk_size,dm
+    while 1:
+        print("\n\nchunk_size:",chunk_size,"\n清晰度:",qn_word,"\n是否下载弹幕(0否1是):",dm)
+        print("\n1 chunk_size设置")
+        print("2 清晰度设置")
+        print("3 弹幕设置")
+        print("4 保存下载设置")
+        print("5 返回")
+        print("\n请输入对应的操作数字: ", end=" ")
+        op = input()
+        if op == '1':
+            print("当前chunk_size:",chunk_size)
+            print("输入y更改chunk_size,输入其他返回")
+            ans=input()
+            if ans=='y':
+                print("请输入新的chunk_size:",end=" ")
+                chunk_size=int(input())
+                print("当前chunk_size:",chunk_size)
+        if op == '2':
+            check_qn()
+        if op == '3':
+            print("当前dm:",dm)
+            print("输入y更改dm,输入其他返回")
+            ans=input()
+            if ans=='y':
+                dm^=1
+                print("当前dm:",dm)
+        if op == '4':
+            setting.set_config(qn_word,chunk_size,dm)
+            print("当前下载设置已保存")
+        if op == '5':
+            print("返回")
+            break
+    
+            
 
 # cli主程序
 def cli():
-    global chunk_size
+    global chunk_size,qn_word,qn,dm
     # 更新headers
     setheaders()
+    # 获取配置
+    config=setting.get_config()
+    if len(config)==3:
+        qn_word,chunk_size,dm=config
+        chunk_size=int(chunk_size)
+        dm=int(dm)
+        qn=qn_map[qn_word]
     print("""
               
 
@@ -139,7 +188,7 @@ def cli():
         print("请输入对应的操作数字: ", end=" ")
         c = input()
         # 退出
-        if c == '7':
+        if c == '6':
             break
         # 设置headers
         elif c == '2':
@@ -160,7 +209,7 @@ def cli():
                     cid = str(cid_group[0]['cid'])
                     name=cid_group[0]['part']
                     print("开始下载", name)
-                    download.get_mp4(bvid, cid, headers, qn, name,chunk_size)
+                    download.get_mp4(bvid, cid, headers, qn, name,chunk_size,dm)
                 # 多p下载
                 else:
                     np_download(bvid, cid_group)
@@ -168,9 +217,9 @@ def cli():
             else:
                 download.get_mp4_ep_id(id, headers, qn,chunk_size)
 
-        # 清晰度
+        # 下载设置
         elif c == '4':
-            check_qn()
+            setting_config()
         # 说明
         elif c == '5':
             print("""
@@ -202,14 +251,7 @@ def cli():
     对于网络速度较慢的文件，可以将 chunk_size 设置为较小的值，例如 1024 或 10240 字节。
                 
 """)
-        elif c=='6':
-            print("当前chunk_size:",chunk_size)
-            print("输入y更改chunk_size,输入其他返回")
-            ans=input()
-            if ans=='y':
-                print("请输入新的chunk_size:",end=" ")
-                chunk_size=int(input())
-                print("当前chunk_size:",chunk_size)
+            
         else:
             print("未知操作")
 
