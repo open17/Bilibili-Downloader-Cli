@@ -5,3 +5,5 @@ dist/
 *.spec
 *.mp4
 *.pyc
+dist/cli.exe
+config.json

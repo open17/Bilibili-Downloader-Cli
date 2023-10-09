@@ -1,108 +1,70 @@
-import getInfo
-import cookies
-import download
-import login
-import setting
-
-# options
-ops = ['设置cookies(SESSDATA)', '查看headers', '开始下载', '下载设置', '说明','退出']
-
-# default header
-headers = {
-    'Referer': 'https://www.bilibili.com',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0',
-}
-
-qn_list = ["240P 极速",
-           "360P 流畅",
-           "480P 清晰",
-           "720P 高清",
-           "720P60 高帧率",
-           "1080P 高清",
-           "1080P+ 高码率",
-           "1080P60 高帧率",
-           "4K 超清"]
-qn_map = {
-    "240P 极速": "6",
-    "360P 流畅": "16",
-    "480P 清晰": "32",
-    "720P 高清": "64",
-    "720P60 高帧率": "74",
-    "1080P 高清": "80",
-    "1080P+ 高码率": "112",
-    "1080P60 高帧率": "116",
-    "4K 超清": "120"
-}
-
-#默认chunk_size
-chunk_size=1024
-
-# 默认清晰度
-qn = "80"
-qn_word="1080P 高清"
-
-# 设置弹幕(0关)
-dm=0
-
-# 设置headers
-def setheaders():
-    Cookies = cookies.get_cookies()
-    if Cookies:
-        headers['Cookie'] = Cookies
+from controller import controller
 
 
-# 获取headers
-def getheaders():
-    print("\n当前headers:\n", headers)
-    print()
+def cli():
+    # 初始化
+    co = init()
+    show_config(co)
+    # options
+    ops = ['设置', '下载', '退出']
 
-# 清晰度
-def check_qn():
-    global qn,qn_word
-    print("当前清晰度", qn_word,"\n\n")
-    for i,qn_w in enumerate(qn_list):
-        print(i+1,qn_w)
-    print("\n要更改清晰度请输入对应的序号,输入其他任意键退出:",end=" ")
-    try:
-        idx = int(input())
-        qn_word=qn_list[idx-1]
-        qn=qn_map[qn_word]
-        print("修改完成,当前清晰度:", qn_word)
-    except:
-        print("返回主界面")
+    while True:
+        check_cookies(co)
+        for i in range(len(ops)):
+            print(i+1, ops[i])
+        print("请输入对应的操作数字: ", end=" ")
+        opt = input()
+        if opt == '1':
+            config_cli(co)
+        elif opt == '2':
+            download_cli(co)
+        elif opt == '3':
+            break
+        else:
+            print("输入错误,请重新输入")
 
 
-# 更新cookies
-def setcookies():
-    print("请确认获取cookies方式:\n1 扫码登入自动获取 \n2 手动输入cookies(SESSDATA)值")
-    ans = input()
-    if ans == "1":
-        print("生成登入二维码...")
-        SESSDATA = login.qrlogin_return_cookies()
+def download_cli(co: controller):
+    print("输入bvid/ep_id:")
+    id = input()
+    # 如果是bvid
+    if id[:2] == "BV":
+        bvid = id
+        cid_group = co.get_cid(bvid)
+      # 单p直接下载
+        if (len(cid_group) == 1):
+            p_download(co, bvid, cid_group)
+      # 多p下载
+        else:
+            np_download(co, bvid, cid_group)
+    # ep_id
     else:
-        print("请输入SESSDATA值: ", end=" ")
-        SESSDATA = input()
-    cookies.set_cookies(SESSDATA)
-    setheaders()
-    print("自动更新headers")
-    getheaders()
+        spid = id
+        co.download_epid_video(spid)
 
-# 多p下载视频
-def np_download(bvid, cid_group):
+
+def p_download(co, bvid, cid_group):
+    cid = str(cid_group[0]['cid'])
+    name = cid_group[0]['part']
+    print("开始下载", name)
+    co.download_biv_video_dm(bvid, cid, name)
+
+
+def np_download(co, bvid, cid_group):
     while 1:
         print("当前视频含有", len(cid_group), "p")
         print("1 单视频下载")
         print("2 批量下载")
-        print("3 清晰度")
-        print("4 返回")
+        print("3 返回")
         print("请输入对应的操作数字: ", end=" ")
         op = input()
         if op == '1':
             print("输入要下载的p号(1 -", len(cid_group), "): ", end=" ")
             id = int(input())-1
             cid = str(cid_group[id]['cid'])
-            print("开始下载", cid_group[id]['part'],)
-            download.get_mp4(bvid, cid, headers, qn,cid_group[id]['part'],chunk_size,dm)
+            name = cid_group[id]['part']
+            print("开始下载", name,)
+            co.download_biv_video_dm(bvid, cid, name)
         if op == '2':
             print("输入要下载的开始p号: ", end=" ")
             s = int(input())-1
@@ -110,152 +72,122 @@ def np_download(bvid, cid_group):
             e = int(input())
             for i in range(s, e):
                 cid = str(cid_group[i]['cid'])
-                print("开始下载", cid_group[i]['part'])
-                download.get_mp4(bvid, cid, headers, qn,cid_group[i]['part'],chunk_size,dm)
-        if op == '4':
+                name = cid_group[i]['part']
+                print("开始下载", name)
+                co.download_biv_video_dm(bvid, cid, name)
+        if op == '3':
             print("返回")
             break
-        if op == '3':
-            check_qn()
+        else:
+            print("输入错误，请重新输入")
 
-# 下载设置
-def setting_config():
-    global chunk_size,dm
+
+def config_cli(co: controller):
     while 1:
-        print("\n\nchunk_size:",chunk_size,"\n清晰度:",qn_word,"\n是否下载弹幕(0否1是):",dm)
-        print("\n1 chunk_size设置")
-        print("2 清晰度设置")
-        print("3 弹幕设置")
-        print("4 保存下载设置")
-        print("5 返回")
-        print("\n请输入对应的操作数字: ", end=" ")
-        op = input()
-        if op == '1':
-            print("当前chunk_size:",chunk_size)
-            print("输入y更改chunk_size,输入其他返回")
-            ans=input()
-            if ans=='y':
-                print("请输入新的chunk_size:",end=" ")
-                chunk_size=int(input())
-                print("当前chunk_size:",chunk_size)
-        if op == '2':
-            check_qn()
-        if op == '3':
-            print("当前dm:",dm)
-            print("输入y更改dm,输入其他返回")
-            ans=input()
-            if ans=='y':
-                dm^=1
-                print("当前dm:",dm)
-        if op == '4':
-            setting.set_config(qn_word,chunk_size,dm)
-            print("当前下载设置已保存")
-        if op == '5':
-            print("返回")
-            break
-    
-            
-
-# cli主程序
-def cli():
-    global chunk_size,qn_word,qn,dm
-    # 更新headers
-    setheaders()
-    # 获取配置
-    config=setting.get_config()
-    if len(config)==3:
-        qn_word,chunk_size,dm=config
-        chunk_size=int(chunk_size)
-        dm=int(dm)
-        qn=qn_map[qn_word]
-    print("""
-              
-
- ██████╗ ██████╗ ███████╗███╗   ██╗ ██╗███████╗  
- ██╔═══██╗██╔══██╗██╔════╝████╗  ██║███║╚════██║    
- ██║   ██║██████╔╝█████╗  ██╔██╗ ██║╚██║    ██╔╝    
- ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║ ██║   ██╔╝     
- ╚██████╔╝██║     ███████╗██║ ╚████║ ██║   ██║      
-  ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚═╝   ╚═╝      
-
-
-""")
-    while 1:
-        print("\n\n")
+        print("\n\n这里是设置界面")
+        ops = ["查看配置", "登录(headers)", "弹幕设置(dm)", "清晰度设置(qn)",
+               "下载切片大小设置(chunk_size)", "说明", "同步配置", "重置设置", "返回"]
         for i in range(len(ops)):
             print(i+1, ops[i])
-        print()
         print("请输入对应的操作数字: ", end=" ")
-        c = input()
-        # 退出
-        if c == '6':
+        opt = input()
+        if opt == '1':
+            show_config(co)
+        elif opt == '2':
+            co.login_update_headers()
+        elif opt == '3':
+            dm_cli(co)
+        elif opt == '4':
+            qn_cli(co)
+        elif opt == '5':
+            chunk_size_cli(co)
+        elif opt == '6':
+            usebook()
+        elif opt == '7':
+            co.sync_config()
+        elif opt == '8':
+            co.reset_config()
+        elif opt == '9':
             break
-        # 设置headers
-        elif c == '2':
-            getheaders()
-        # 设置cookies
-        elif c == '1':
-            setcookies()
-        # 下载视频
-        elif c == '3':
-            print("输入bvid/ep_id:")
-            id = input()
-            # 如果是bvid
-            if id[:2] == "BV":
-                bvid = id
-                cid_group = getInfo.getcid(bvid, headers)
-                # 单p直接下载
-                if (len(cid_group) == 1):
-                    cid = str(cid_group[0]['cid'])
-                    name=cid_group[0]['part']
-                    print("开始下载", name)
-                    download.get_mp4(bvid, cid, headers, qn, name,chunk_size,dm)
-                # 多p下载
-                else:
-                    np_download(bvid, cid_group)
-            # ep_id
-            else:
-                download.get_mp4_ep_id(id, headers, qn,chunk_size)
-
-        # 下载设置
-        elif c == '4':
-            setting_config()
-        # 说明
-        elif c == '5':
-            print("""
-
-说明:
-                  
-1. bvid是什么?
-                  
-    >bvid即为bv号,b站每个视频现在均有一个对应的bv号,格式为BVxxxx,例如BV19u4y1D7GT
-                  
-                  
-2. 如何获取一个视频的bvid
-                  
-    >移动端在视频的简介处显示,网页端可查看当前链接获取
-    例如视频链接为https://www.bilibili.com/video/BV19u4y1D7GT/?spm_id_from=... , 很明显bvid即为BV19u4y1D7GT
-                  
-3. cookies(SESSDATA)是什么?有什么用?
-                  
-    >cookies(SESSDATA)用于某些b站请求的鉴权,比如说如果需要获取一个视频720P及以上其清晰度,便需要设置cookies才能获取(登录)
-    你可以采取扫码登录,或者也可以手动输入cookies中SESSDATA对应的值
-    你可以查看网上教程得知如何取得b站的cookies
-
-4. epid下载失败?
-   > 你可以尝试采取BV号下载的方式,并欢迎来提交issue
-
-5. 下载设置是什么?
-   > 目前设置chunk_size,dm,qn三个属性
-   chunk_size 越大，下载速度越快，但是也越容易导致网络阻塞。一般来说，网络速度较快时可以将 chunk_size 设置为较大的值，例如 10240 或 102400 字节。网络速度较慢,为了避免堵塞，可以将 chunk_size 设置为较小的值，例如 1024 或 10240 字节。
-   dm决定是否下载弹幕,1下载,0不下载,初始默认值为0.
-   qn为清晰度.
-
-                
-""")
-            
         else:
-            print("未知操作")
+            print("输入错误,请重新输入")
+
+
+def usebook():
+    print("1. 你可以直接修改config.json文件来更新任何的设置,也可以通过cli交互更改")
+    print("2. 如果你不知道怎么修改config.json文件,请直接通过cli交互更改")
+    print("3. 手动修改config.json后请在设置中运行同步配置")
+    print("4. chunk_size 越大，下载速度越快，但是也越容易导致网络阻塞。一般来说，网络速度较快时可以将 chunk_size 设置为较大的值，例如 10240 或 102400 字节。网络速度较慢,为了避免堵塞，可以将 chunk_size 设置为较小的值，例如 1024 或 10240 字节。dm决定是否下载弹幕,True下载,False不下载,初始默认值为True.qn为清晰度.")
+
+
+def chunk_size_cli(co: controller):
+    print("请输入下载切片大小: ", end=" ")
+    chunk_size = int(input())
+    co.set_none_headers_config(chunk_size=chunk_size)
+    print("切片大小设置成功")
+
+
+def qn_cli(co: controller):
+    print("请输入清晰度: \n")
+    qn_list = ["240P 极速",
+               "360P 流畅",
+               "480P 清晰",
+               "720P 高清",
+               "720P60 高帧率",
+               "1080P 高清",
+               "1080P+ 高码率",
+               "1080P60 高帧率",
+               "4K 超清"]
+    qn_list_num = [6, 16, 32, 64, 74, 80, 112, 116, 120]
+    for i in range(len(qn_list)):
+        print(i+1, qn_list[i])
+    print("请输入对应的操作数字: ", end=" ")
+    opt = input()
+    if int(opt) > len(qn_list_num):
+        print("输入错误,请重新输入")
+    else:
+        co.set_none_headers_config(qn=qn_list_num[int(opt)-1])
+
+
+def dm_cli(co: controller):
+    print("是否下载弹幕?")
+    print("1.下载弹幕")
+    print("2.不下载弹幕")
+    print("3.退出")
+    print("请输入对应的操作数字: ", end=" ")
+    opt = input()
+    if opt == '1':
+        ans = True
+    elif opt == '2':
+        ans = False
+    else:
+        return
+    co.set_none_headers_config(dm=ans)
+
+
+def check_cookies(co: controller):
+    if co.check_cookies():
+        print("已登录")
+    else:
+        print("当前状态:未登录b站账号")
+        print("未登录状态会影响一些下载功能,比如大会员番剧下载,视频1080p下载等,如有这方面需求,请在设置界面完成登录")
+
+
+def show_config(co):
+    print("\n当前配置:")
+    config = co.get_config()
+    for i in config.keys():
+        if type(config[i]) != dict:
+            print(i, ":", config[i])
+        else:
+            for j in config[i].keys():
+                print(i, ":", j, ":", config[i][j])
+
+
+def init():
+    co = controller()
+    print("初始化完成")
+    return co
 
 
 if __name__ == "__main__":

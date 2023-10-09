@@ -1,17 +1,33 @@
-# Bilibili Downloader Cli
-一个简易轻便的b站下载器,支持下载B站视频,番剧,电影,电视剧等
+<div align="center">
+    <h1 href=" open17.github.io/vuepress-theme-qbook/" align="center">Bilibili Downloader Cli</h1>
+    <p align="center">< 轻量级b站视频下载器 ></p>
+    <p align="center">
+        <a href=""><img src="https://img.shields.io/badge/下载-视频-pink?style=flat-square" alt="video"></a>
+         <a href=""><img src="https://img.shields.io/badge/下载-番剧-red?style=flat-square" alt="fan"></a>
+         <a href=""><img src="https://img.shields.io/badge/下载-弹幕-green?style=flat-square" alt="dm"></a>
+         <a href=""><img src="https://img.shields.io/badge/下载-电影电视剧-blue?style=flat-square" alt="movie"></a>
+        <a href="https://github.com/open17/Bilibili_Downloader_Cli/issues/new/choose" target="_blank">
+            <img src="https://img.shields.io/static/v1?label=feedback&message=issues&color=orange&style=flat-square">
+        </a>
+    </p>
+
+</div>
+
+****
 ## 功能
 - [x] 下载普通视频 
 - [x] 下载多P视频
 - [x] 下载番剧
-- [ ] 下载音乐
+- [ ] <del>下载音频</del>
 - [x] 下载电影(需要额外付费电影除外)
 - [x] 下载电视剧 
 - [x] 下载xml实时弹幕
 - [x] 切换画质
 - [x] 扫码登录/手动输入cookies
 - [x] 支持BV号/EP号下载 
-
+> 注: 鉴于b站音频区在app新版已经不可见,音频下载不再作为目标功能,但你依然可以通过分离下载视频的音频部分实现音频下载
+## 更新
+- 2023.10.09 重构全部代码,优化交互逻辑
 ## 使用
 ### 运行exe版本
 你可以到[releases页面](https://github.com/open17/Bilibili_Downloader_Cli/releases)下载安装二进制版本
@@ -21,31 +37,17 @@ git clone https://github.com/open17/Bilibili_Downloader_Cli.git
 cd Bilibili_Downloader_Cli
 python cli.py
 ```
+## 深入了解
+### 文件结构
+.
+├── cli.py (入口文件,交互命令行)
+│  
+├── ioer.py (输入输出类) 
+│  
+├── downloader.py (下载功能类) 
+│  
+├── qrcookies.py (实现扫码登录并获取cookies) 
+│  
+└── controller.py (控制ioer,downloader,qrcookies)
 
-
-## 其它说明                  
-1. bvid是什么?
-                  
-    >bvid即为bv号,b站每个视频现在均有一个对应的bv号,格式为BVxxxx,例如BV19u4y1D7GT
-                  
-                  
-2. 如何获取一个视频的bvid
-                  
-    >移动端在视频的简介处显示,网页端可查看当前链接获取
-    例如视频链接为https://www.bilibili.com/video/BV19u4y1D7GT/?spm_id_from=... , 很明显bvid即为BV19u4y1D7GT
-                  
-3. cookies(SESSDATA)是什么?有什么用?
-                  
-    >cookies(SESSDATA)用于某些b站请求的鉴权,比如说如果需要获取一个视频720P及以上其清晰度,便需要设置cookies才能获取(登录)
-    你可以采取扫码登录,或者也可以手动输入cookies中SESSDATA对应的值
-    你可以查看网上教程得知如何取得b站的cookies
-
-4. epid下载失败?
-   > 你可以尝试采取BV号下载的方式,并欢迎来提交issue
-
-5. 下载设置是什么?
-   > 目前设置chunk_size,dm,qn三个属性
-   chunk_size 越大，下载速度越快，但是也越容易导致网络阻塞。一般来说，网络速度较快时可以将 chunk_size 设置为较大的值，例如 10240 或 102400 字节。网络速度较慢,为了避免堵塞，可以将 chunk_size 设置为较小的值，例如 1024 或 10240 字节。
-   dm决定是否下载弹幕,1下载,0不下载,初始默认值为0.
-   qn为清晰度.
 
