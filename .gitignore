@@ -1,7 +1,6 @@
 __pycache__/
 build/
 dist/
-*.txt
 *.spec
 *.mp4
 *.pyc
