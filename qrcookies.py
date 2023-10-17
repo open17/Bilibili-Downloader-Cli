@@ -17,7 +17,7 @@ def get_cookies_qr(headers):
     response = requests.get(pass_url, headers=headers)
     res=response.json()['data']['url']
     match = re.search(r'SESSDATA(.+?)&', res)
-    ans="SESSDATA=;"
+    ans=None
     if match:
         ans=match.group()
     return ans

@@ -37,9 +37,9 @@ class controller:
 
     def set_cookies_config(self, cookies):
         if cookies is not None:
-            curr_headers = self.get_headers_config
+            curr_headers = self.get_headers_config()
             curr_headers["cookies"] = cookies
-            self.ioer.update_config(curr_headers)
+            self.ioer.update_config({"headers":curr_headers})
             self.sync_config()
 
     def get_headers_config(self):
