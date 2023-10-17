@@ -1,6 +1,7 @@
 from ioer import ioer
 from downloader import downloader
 from qrcookies import get_cookies_qr
+import re
 
 
 class controller:
@@ -9,6 +10,11 @@ class controller:
         self.ioer = ioer()
         self.downloader = downloader({})
         self.sync_config()
+
+    def sanitize_filename(self, filename):
+        illegal_chars = r'[\\/:"*?<>|]'
+        sanitized_filename = re.sub(illegal_chars, '', filename)
+        return sanitized_filename
 
     def set_none_headers_config(self, qn=None, dm=None, chunk_size=None):
         update_config = {}
@@ -39,16 +45,16 @@ class controller:
         if cookies is not None:
             curr_headers = self.get_headers_config()
             curr_headers["cookies"] = cookies
-            self.ioer.update_config({"headers":curr_headers})
+            self.ioer.update_config({"headers": curr_headers})
             self.sync_config()
 
     def get_headers_config(self):
         return self.get_config()["headers"]
-    
+
     # 当且仅当cookies存在且不等于默认的空白cookies时返回true
     def check_cookies(self):
         if "cookies" in self.get_headers_config().keys():
-            cookies=self.get_headers_config()["cookies"]
+            cookies = self.get_headers_config()["cookies"]
             if cookies != self.ioer.get_default_config()["headers"]["cookies"]:
                 return True
         return False
@@ -60,11 +66,12 @@ class controller:
         self.downloader.get_epid_video(epid)
 
     def download_biv_video_dm(self, bvid, cid, name_raw="Movie"):
-        self.downloader.get_bvid_video(bvid, cid, name_raw)
-        self.download_dm(cid, name_raw)
+        name=self.sanitize_filename(name_raw)
+        self.downloader.get_bvid_video(bvid, cid, name)
+        self.download_dm(cid, name)
 
-    def download_dm(self, cid, name_raw="Movie"):
-        self.downloader.download_dm(cid, name_raw)
+    def download_dm(self, cid, name="Movie"):
+        self.downloader.download_dm(cid, name)
 
     def login_update_headers(self):
         headers = self.get_headers_config()

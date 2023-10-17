@@ -43,7 +43,6 @@ class downloader:
         print("开始下载MP4,根据视频清晰度与网络流畅度,可能需要一点时间,请耐心等候")
         response = requests.get(
             url, headers=self.config["headers"], stream=True)
-        name="a.mp4"
         if response.status_code == 200:
             with open(name, 'wb') as file:
                 content_length = int(response.headers['Content-Length'])
